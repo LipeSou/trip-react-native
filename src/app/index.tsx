@@ -22,6 +22,8 @@ import { tripStorage } from "@/storage/trip";
 import { router } from "expo-router";
 import { tripServer } from "@/server/trip-server";
 import { Loading } from "@/components/Loading";
+import * as Clipboard from 'expo-clipboard';
+
 
 enum StepForm {
   TRIP_DETAILS = 1,
@@ -110,10 +112,15 @@ export default function Index() {
     setEmailToInvite("");
   }
 
-  async function saveTrip(tripId: string) {
+  async function saveTrip(newTrip: {
+    tripId: string;
+    message: string;
+    url: string;
+}) {
     try {
-      await tripStorage.save(tripId);
-      router.navigate("/trip/" + tripId);
+      await tripStorage.save(newTrip.tripId);
+      Clipboard.setStringAsync(newTrip.url);
+      router.navigate("/trip/" + newTrip.tripId);
     } catch (error) {
       Alert.alert(
         "Salvar viagem",
@@ -132,11 +139,11 @@ export default function Index() {
         ends_at: dayjs(selectedDates.endsAt?.dateString).toString(),
         emails_to_invite: emailsToInvite,
       });
-
-      Alert.alert("Nova viagem", "Viagem criada com sucesso!", [
+      console.log(newTrip)
+      Alert.alert("Nova viagem", !!newTrip?.url ? `Viagem criada com sucesso! ⚠️ Ao clicar em continuar você vai copiar o link de convite para o participante, mande esse convite para a pessoa que você convidou`   : "Viagem criada com sucesso!", [
         {
           text: "OK. Continuar.",
-          onPress: () => saveTrip(newTrip.tripId),
+          onPress: () => saveTrip(newTrip),
         },
       ]);
     } catch (error) {
