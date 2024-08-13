@@ -1,5 +1,5 @@
 import { Input } from "@/components/Input";
-import { View, Text, Image, Keyboard, Alert } from "react-native";
+import { View, Text, Image, Keyboard, Alert, Linking } from "react-native";
 import {
   MapPin,
   Calendar as IconCalendar,
@@ -46,6 +46,31 @@ export default function Index() {
   const [emailsToInvite, setEmailsToInvite] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(MODAL.NONE);
 
+  //Deep Linking usado para ao alguem usar um link de viagem entrar
+  useEffect(() => {
+    const handleDeepLink = (event: { url: any; }) => {
+      const url = event.url;
+      const route = url.replace(/.*?:\/\//g, ''); // Remove o esquema e host da URL
+      const tripId = route.match(/trip\/(\d+)/)[1]; // Extrai o ID da viagem
+      
+      // Redireciona para a tela da viagem
+      router.navigate(`/trip/${tripId}`);
+    };
+
+    // Verifica se o app foi aberto com um link
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    // Escuta eventos de deep link enquanto o app está aberto
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    return () => {
+      // Remove o listener ao desmontar o componente
+      subscription.remove();
+    };
+  }, [router]);
+  
   function handleNextStepForm() {
     if (
       destination.trim().length === 0 ||
@@ -139,8 +164,8 @@ export default function Index() {
         ends_at: dayjs(selectedDates.endsAt?.dateString).toString(),
         emails_to_invite: emailsToInvite,
       });
-      console.log(newTrip)
-      Alert.alert("Nova viagem", !!newTrip?.url ? `Viagem criada com sucesso! ⚠️ Ao clicar em continuar você vai copiar o link de convite para o participante, mande esse convite para a pessoa que você convidou`   : "Viagem criada com sucesso!", [
+
+      Alert.alert("Nova viagem", emailsToInvite ? `Viagem criada com sucesso! ⚠️ Ao clicar em continuar você vai copiar o link de convite para o participante, mande esse convite para a pessoa que você convidou`   : "Viagem criada com sucesso!", [
         {
           text: "OK. Continuar.",
           onPress: () => saveTrip(newTrip),
