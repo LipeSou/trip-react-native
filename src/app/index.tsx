@@ -147,7 +147,7 @@ export default function Index() {
         },
       ]);
     } catch (error) {
-      console.log(error);
+      Alert.alert("Não foi possível criar a viagem", `${error}`);
       setIsCreatingTrip(false);
     }
   }
